@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ruleta de Pizzas Napolitanas</title>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#ffcc70">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #fff8f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      color: #333;
+    }
+    h1 {
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+    .wheel {
+      width: 90vw;
+      max-width: 320px;
+      height: 90vw;
+      max-height: 320px;
+      border-radius: 50%;
+      border: 10px solid #ffcc70;
+      position: relative;
+      overflow: hidden;
+      transform: rotate(0deg);
+      transition: transform 4s ease-out;
+    }
+    .segment {
+      position: absolute;
+      width: 50%;
+      height: 50%;
+      background: #ff7b54;
+      transform-origin: 100% 100%;
+      clip-path: polygon(100% 100%, 0% 100%, 100% 0%);
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 10px;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-shadow: 1px 1px 2px #00000088;
+      text-align: right;
+    }
+    #spinBtn {
+      margin-top: 2rem;
+      padding: 1rem 2rem;
+      font-size: 1.2rem;
+      background-color: #f76e11;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    #result {
+      margin-top: 1.5rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      text-align: center;
+    }
+    @media (max-width: 400px) {
+      .segment {
+        font-size: 0.65rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Ruleta de Pizzas Napolitanas</h1>
+  <div class="wheel" id="wheel"></div>
+  <button id="spinBtn">¡Gira la ruleta!</button>
+  <div id="result"></div>
+  <audio id="tickSound" src="https://www.soundjay.com/mechanical/sounds/mechanical-clunk-1.mp3"></audio>
+
+  <script>
+    const pizzas = [
+      "Margherita",
+      "Diavola con miel",
+      "Mortadela y pistacho",
+      "Gorgonzola y pera",
+      "Pesto rosso y berenjena",
+      "Capricciosa",
+      "Atún y cebolla",
+      "Rúcula y speck",
+      "Cuatro quesos",
+      "Burrata y tomate cherry",
+      "Funghi y trufa",
+      "Zucchini y ricotta",
+      "Carpaccio y rúcula",
+      "Anchoas y aceitunas",
+      "Pollo marinado y pesto verde",
+      "Melanzane alla parmigiana"
+    ];
+
+    const wheel = document.getElementById("wheel");
+    const result = document.getElementById("result");
+    const btn = document.getElementById("spinBtn");
+    const tick = document.getElementById("tickSound");
+
+    const angleStep = 360 / pizzas.length;
+    pizzas.forEach((pizza, i) => {
+      const seg = document.createElement("div");
+      seg.className = "segment";
+      seg.style.backgroundColor = `hsl(${i * (360 / pizzas.length)}, 70%, 50%)`;
+      seg.style.transform = `rotate(${i * angleStep}deg)`;
+      seg.innerText = pizza;
+      wheel.appendChild(seg);
+    });
+
+    let currentAngle = 0;
+
+    btn.onclick = () => {
+      const randomSpin = 360 * 5 + Math.floor(Math.random() * 360);
+      currentAngle += randomSpin;
+      wheel.style.transition = "transform 4s ease-out";
+      wheel.style.transform = `rotate(${currentAngle}deg)`;
+
+      let ticks = 0;
+      const interval = setInterval(() => {
+        tick.currentTime = 0;
+        tick.play();
+        if (++ticks > 40) clearInterval(interval);
+      }, 100);
+
+      setTimeout(() => {
+        const finalDeg = currentAngle % 360;
+        const index = Math.floor((360 - finalDeg) / angleStep) % pizzas.length;
+        result.innerText = `¡Esta noche toca: ${pizzas[index]}!`;
+      }, 4100);
+    };
+
+    // PWA service worker
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(reg => console.log('Service Worker registrado'))
+        .catch(err => console.error('Error registrando SW:', err));
+    }
+  </script>
+</body>
+</html>
